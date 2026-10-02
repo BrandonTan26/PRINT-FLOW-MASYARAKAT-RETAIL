@@ -27,19 +27,21 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-secondary);color:var(--text-primary);line-height:1.5}
 #app{display:flex;min-height:100vh}
-.sidebar{width:var(--sidebar-width);background:var(--bg-card);border-right:1px solid var(--border-color);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:50;transition:transform .3s ease}
-.sidebar-header{padding:20px;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center}
-.sidebar-brand{font-weight:900;font-size:1.5rem;color:var(--accent-color)}
-.sidebar-version{font-size:.75rem;color:var(--text-secondary);font-weight:600;margin-top:4px}
-.sidebar-close{display:none;width:32px;height:32px;border-radius:var(--radius);border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);cursor:pointer;font-size:1.2rem;align-items:center;justify-content:center;transition:all .2s}
-.sidebar-close:hover{background:var(--bg-secondary);color:var(--danger-color)}
+.sidebar{width:var(--sidebar-width);background:var(--bg-card);border-right:1px solid var(--border-color);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:50;transition:transform 0.3s ease}
+.sidebar.closed{transform:translateX(-100%)}
+.sidebar-header{padding:20px;border-bottom:1px solid var(--border-color);text-align:center;position:relative}
+.sidebar-close-btn{position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-secondary);padding:5px}
+.sidebar-close-btn:hover{color:var(--text-primary)}
+.sidebar-brand{font-weight:900;font-size:1.5rem;color:var(--accent-color);margin-bottom:4px}
+.sidebar-version{font-size:.75rem;color:var(--text-secondary);font-weight:600}
 .sidebar-menu{flex:1;overflow-y:auto;padding:16px 12px}
 .menu-item{display:flex;align-items:center;padding:12px;border-radius:var(--radius);color:var(--text-secondary);text-decoration:none;margin-bottom:4px;transition:all .2s;cursor:pointer}
 .menu-item:hover{background:var(--bg-secondary);color:var(--text-primary)}
 .menu-item.active{background:var(--accent-color);color:white}
 .menu-item svg{margin-right:12px;width:20px;height:20px}
 .sidebar-footer{padding:16px;border-top:1px solid var(--border-color);font-size:.75rem;color:var(--text-secondary);text-align:center}
-.main-wrapper{flex:1;margin-left:var(--sidebar-width);display:flex;flex-direction:column}
+.main-wrapper{flex:1;margin-left:var(--sidebar-width);display:flex;flex-direction:column;transition:margin-left 0.3s ease}
+.main-wrapper.sidebar-closed{margin-left:0}
 .topbar{height:var(--topbar-height);background:var(--bg-card);border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:40}
 .topbar-left,.topbar-right{display:flex;align-items:center;gap:16px}
 .topbar-title{font-weight:700;font-size:1.1rem}
@@ -95,33 +97,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .items-center{align-items:center}
 .preview-wrapper{display:flex;justify-content:center;align-items:flex-start;width:100%}
 
-/* PERBAIKAN: Overlay untuk close sidebar di mobile */
-.sidebar-overlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.5);
-  z-index:45;
-  opacity:0;
-  transition:opacity .3s ease;
-}
-.sidebar-overlay.active{
-  display:block;
-  opacity:1;
-}
-
 @media print{
   body *{visibility:hidden}
   #print-area,#print-area *{visibility:visible}
   #print-area{position:absolute;left:0;top:0;width:100%;margin:0;padding:0;background:white;color:black;z-index:9999}
-  .sidebar,.topbar,.content-preview,.toast-container,.modal-overlay,.footer-content,.sidebar-overlay{display:none !important}
+  .sidebar,.topbar,.content-preview,.toast-container,.modal-overlay,.footer-content{display:none !important}
   .main-wrapper{margin-left:0}
   @page{margin:0;size:auto}
 }
 @media(max-width:1024px){
   .sidebar{transform:translateX(-100%);width:280px}
   .sidebar.mobile-open{transform:translateX(0)}
-  .sidebar-close{display:flex} /* Tampilkan tombol close di mobile */
   .main-wrapper{margin-left:0}
   .content-area{flex-direction:column}
   .content-preview{width:100%;position:static}
@@ -131,17 +117,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </head>
 <body>
 <div id="app">
-  <!-- PERBAIKAN: Overlay untuk close sidebar -->
-  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div>
-        <div class="sidebar-brand">PRINTFLOW</div>
-        <div class="sidebar-version">VERSI 1.0 PRO</div>
-      </div>
-      <!-- PERBAIKAN: Tombol close di sidebar -->
-      <button class="sidebar-close" onclick="closeSidebar()" title="Tutup Sidebar"></button>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" title="Tutup Sidebar">×</button>
+      <div class="sidebar-brand">PRINTFLOW</div>
+      <div class="sidebar-version">VERSI 1.0 PRO</div>
     </div>
     <nav class="sidebar-menu">
       <a class="menu-item active" data-page="create" onclick="navigateTo('create')">
@@ -167,10 +147,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
   </aside>
 
-  <div class="main-wrapper">
+  <div class="main-wrapper" id="main-wrapper">
     <header class="topbar">
       <div class="topbar-left">
-        <button class="icon-btn" onclick="toggleSidebar()" title="Buka Sidebar">☰</button>
+        <button class="icon-btn" onclick="toggleSidebar()" title="Buka/Tutup Sidebar">☰</button>
         <div>
           <div class="topbar-title" id="page-title">Buat Promo</div>
           <div class="breadcrumb" id="breadcrumb">Buat Promo</div>
@@ -201,7 +181,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="toast-container" id="toast-container"></div>
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
-    <div class="modal-header"><h3 id="modal-title">Konfirmasi</h3><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-header"><h3 id="modal-title">Konfirmasi</h3><button class="icon-btn" onclick="closeModal()">×</button></div>
     <div class="modal-body" id="modal-body"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Batal</button>
@@ -257,90 +237,127 @@ const FONT_WEIGHT_OPTIONS=[
 async function initDB(){
   return new Promise((resolve,reject)=>{
     const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
-    deleteRequest.onsuccess = () => console.log('Database lama dihapus');
-    deleteRequest.onerror = () => console.log('Tidak ada database lama');
-    deleteRequest.onblocked = () => console.log('Database sedang digunakan');
+    deleteRequest.onsuccess = () => {
+      console.log('Database lama dihapus untuk reset');
+    };
+    deleteRequest.onerror = () => {
+      console.log('Tidak ada database lama atau error menghapus');
+    };
+    deleteRequest.onblocked = () => {
+      console.log('Database sedang digunakan, tunggu...');
+    };
 
     setTimeout(() => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
       
       request.onupgradeneeded = (event) => {
         const database = event.target.result;
+        console.log('Upgrading database...');
+        
         const stores = database.objectStoreNames;
         for (let i = 0; i < stores.length; i++) {
           database.deleteObjectStore(stores[i]);
         }
-        if (!database.objectStoreNames.contains('docs')) database.createObjectStore('docs', { keyPath: 'id' });
-        if (!database.objectStoreNames.contains('queue')) database.createObjectStore('queue', { keyPath: 'id' });
-        if (!database.objectStoreNames.contains('history')) database.createObjectStore('history', { keyPath: 'id' });
-        if (!database.objectStoreNames.contains('settings')) database.createObjectStore('settings', { keyPath: 'id' });
+        
+        if (!database.objectStoreNames.contains('docs')) {
+          database.createObjectStore('docs', { keyPath: 'id' });
+          console.log('Object store "docs" dibuat');
+        }
+        if (!database.objectStoreNames.contains('queue')) {
+          database.createObjectStore('queue', { keyPath: 'id' });
+          console.log('Object store "queue" dibuat');
+        }
+        if (!database.objectStoreNames.contains('history')) {
+          database.createObjectStore('history', { keyPath: 'id' });
+          console.log('Object store "history" dibuat');
+        }
+        if (!database.objectStoreNames.contains('settings')) {
+          database.createObjectStore('settings', { keyPath: 'id' });
+          console.log('Object store "settings" dibuat');
+        }
       };
       
       request.onsuccess = (event) => {
         db = event.target.result;
+        console.log('Database berhasil dibuka');
         resolve(db);
       };
       
-      request.onerror = (event) => reject(new Error('Gagal membuka database: ' + event.target.error.message));
-      request.onblocked = (event) => reject(new Error('Database sedang digunakan. Silakan refresh halaman.'));
+      request.onerror = (event) => {
+        console.error('Error membuka database:', event.target.error);
+        reject(new Error('Gagal membuka database: ' + event.target.error.message));
+      };
+      
+      request.onblocked = (event) => {
+        console.error('Database blocked. Tutup tab lain yang menggunakan aplikasi ini.');
+        reject(new Error('Database sedang digunakan. Silakan refresh halaman.'));
+      };
     }, 500);
   });
 }
 
 function dbOp(store,mode,cb){
   return new Promise((res,rej)=>{
-    if(!db){rej(new Error('Database belum terinisialisasi'));return;}
+    if(!db){
+      rej(new Error('Database belum terinisialisasi'));
+      return;
+    }
     try{
       const tx=db.transaction(store,mode);
       const r=cb(tx.objectStore(store));
       r.onsuccess=()=>res(r.result);
       r.onerror=()=>rej(r.error);
       tx.onerror = (e) => rej(e.target.error);
-    }catch(err){rej(err);}
+    }catch(err){
+      rej(err);
+    }
   });
 }
 
-async function save(s,d){try{await dbOp(s,'readwrite',st=>st.put(d));}catch(err){console.error('Error saving:',err);throw err;}}
-async function get(s,id){try{return await dbOp(s,'readonly',st=>st.get(id));}catch(err){console.error('Error getting:',err);throw err;}}
-async function getAll(s){try{return await dbOp(s,'readonly',st=>st.getAll());}catch(err){console.error('Error getting all:',err);return [];}}
-async function del(s,id){try{await dbOp(s,'readwrite',st=>st.delete(id));}catch(err){console.error('Error deleting:',err);throw err;}}
+async function save(s,d){
+  try{
+    await dbOp(s,'readwrite',st=>st.put(d));
+  }catch(err){
+    console.error('Error saving to', s, ':', err);
+    throw err;
+  }
+}
+
+async function get(s,id){
+  try{
+    return await dbOp(s,'readonly',st=>st.get(id));
+  }catch(err){
+    console.error('Error getting from', s, ':', err);
+    throw err;
+  }
+}
+
+async function getAll(s){
+  try{
+    return await dbOp(s,'readonly',st=>st.getAll());
+  }catch(err){
+    console.error('Error getting all from', s, ':', err);
+    return [];
+  }
+}
+
+async function del(s,id){
+  try{
+    await dbOp(s,'readwrite',st=>st.delete(id));
+  }catch(err){
+    console.error('Error deleting from', s, ':', err);
+    throw err;
+  }
+}
 
 async function loadSettings(){
   try{
     const s=await get('settings','app');
     appSettings=s||{printerType:'thermal-80',fontFamily:'Arial',fontWeight:'900'};
   }catch(err){
+    console.error('Error loading settings:', err);
     appSettings={printerType:'thermal-80',fontFamily:'Arial',fontWeight:'900'};
   }
-}
-
-// PERBAIKAN: Fungsi toggle dan close sidebar yang proper
-function toggleSidebar(){
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('sidebar-overlay');
-  const isOpen = sidebar.classList.contains('mobile-open');
-  
-  if(isOpen){
-    closeSidebar();
-  } else {
-    openSidebar();
-  }
-}
-
-function openSidebar(){
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('sidebar-overlay');
-  sidebar.classList.add('mobile-open');
-  overlay.classList.add('active');
-  document.body.style.overflow = 'hidden'; // Prevent scroll saat sidebar terbuka
-}
-
-function closeSidebar(){
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('sidebar-overlay');
-  sidebar.classList.remove('mobile-open');
-  overlay.classList.remove('active');
-  document.body.style.overflow = ''; // Restore scroll
 }
 
 function navigateTo(page){
@@ -351,10 +368,13 @@ function navigateTo(page){
   document.getElementById('page-title').textContent=titles[page]||'Buat Promo';
   document.getElementById('breadcrumb').textContent=titles[page]||'Buat Promo';
   renderPage(page);
-  // PERBAIKAN: Auto-close sidebar di mobile setelah klik menu
-  if(window.innerWidth <= 1024){
-    closeSidebar();
-  }
+}
+
+function toggleSidebar(){
+  const sidebar=document.getElementById('sidebar');
+  const mainWrapper=document.getElementById('main-wrapper');
+  sidebar.classList.toggle('closed');
+  mainWrapper.classList.toggle('sidebar-closed');
 }
 
 function toggleTheme(){
@@ -385,11 +405,17 @@ function closeModal(){document.getElementById('modal-overlay').classList.remove(
 async function renderPage(page){
   const m=document.getElementById('main-content');
   m.innerHTML='';
-  if(page==='create') renderCreatePage(m);
-  else if(page==='queue') renderQueuePage(m);
-  else if(page==='history') renderHistoryPage(m);
-  else if(page==='settings') renderSettingsPage(m);
-  else renderCreatePage(m);
+  if(page==='create'){
+    renderCreatePage(m);
+  }else if(page==='queue'){
+    renderQueuePage(m);
+  }else if(page==='history'){
+    renderHistoryPage(m);
+  }else if(page==='settings'){
+    renderSettingsPage(m);
+  }else{
+    renderCreatePage(m);
+  }
 }
 
 function renderCreatePage(container){
@@ -515,35 +541,35 @@ function buildLabelHTML(doc,forPrint=false){
   const fontWeight=appSettings.fontWeight||'900';
   
   const w=forPrint?(appSettings.printerWidth||'80mm'):'280px';
-  const style=forPrint?`background:white;color:black;padding:16px;font-family:${fontFamily},sans-serif`:
+  const style=forPrint?`background:white;color:black;padding:16px;font-family:${fontFamily},sans-serif;font-size:12px`:
     `background:white;color:black;padding:16px;font-family:${fontFamily},sans-serif;box-shadow:var(--shadow-md);border-radius:4px`;
   
   let html=`<div style="width:${w};${style}">`;
   
   if(badgeText){
-    html+=`<div style="background:#000;color:#fff;padding:8px 12px;text-align:center;font-weight:800;font-size:1rem;margin-bottom:12px;letter-spacing:1px">${badgeText}</div>`;
+    html+=`<div style="background:#000;color:#fff;padding:8px 12px;text-align:center;font-weight:800;font-size:14px;margin-bottom:12px;letter-spacing:1px">${badgeText}</div>`;
   }
   
-  html+=`<div style="font-size:1.5rem;font-weight:${fontWeight};text-align:center;text-transform:uppercase;line-height:1.2;margin:12px 0">${doc.productName||'NAMA PRODUK'}</div>`;
-  html+=`<div style="text-align:center;color:#374151;font-size:.95rem;margin-bottom:8px">${doc.productDetail||'Detail'}</div>`;
+  html+=`<div style="font-size:18px;font-weight:${fontWeight};text-align:center;text-transform:uppercase;line-height:1.2;margin:12px 0;color:#000">${doc.productName||'NAMA PRODUK'}</div>`;
+  html+=`<div style="text-align:center;color:#000;font-size:14px;margin-bottom:8px;font-weight:600">${doc.productDetail||'Detail'}</div>`;
   
   if(badgeText){
-    html+=`<div style="text-align:center;margin:8px 0"><div style="background:#000;color:#fff;padding:6px 12px;display:inline-block;font-weight:700;font-size:.85rem">${badgeText}</div></div>`;
+    html+=`<div style="text-align:center;margin:8px 0"><div style="background:#000;color:#fff;padding:6px 12px;display:inline-block;font-weight:700;font-size:12px">${badgeText}</div></div>`;
   }
   
   html+=`<div style="text-align:center;margin:12px 0">`;
-  html+=`<span style="font-size:1.1rem;color:#9ca3af;text-decoration:line-through;display:block;margin-bottom:4px">Rp ${priceNormal.toLocaleString('id-ID')}${doc.unit||''}</span>`;
+  html+=`<span style="font-size:14px;color:#000;text-decoration:line-through;display:block;margin-bottom:4px;font-weight:600">Rp ${priceNormal.toLocaleString('id-ID')}${doc.unit||''}</span>`;
   
   html+=`<div style="display:flex;align-items:baseline;justify-content:center;gap:4px">`;
-  html+=`<span style="font-size:2.8rem;font-weight:${fontWeight};line-height:1;color:#000">${pricePromo.toLocaleString('id-ID')}</span>`;
-  html+=`<span style="font-size:1rem;color:#6b7280">${doc.unit||''}</span>`;
+  html+=`<span style="font-size:32px;font-weight:${fontWeight};line-height:1;color:#000">${pricePromo.toLocaleString('id-ID')}</span>`;
+  html+=`<span style="font-size:14px;color:#000;font-weight:600">${doc.unit||''}</span>`;
   html+=`</div></div>`;
   
   html+=`<div style="text-align:center;margin:12px 0">`;
-  html+=`<div style="border:2px solid #000;padding:8px 16px;display:inline-block;font-weight:800;font-size:1rem">HEMAT RP ${hemat.toLocaleString('id-ID')}</div>`;
+  html+=`<div style="border:2px solid #000;padding:8px 16px;display:inline-block;font-weight:800;font-size:14px;color:#000">HEMAT RP ${hemat.toLocaleString('id-ID')}</div>`;
   html+=`</div>`;
   
-  html+=`<div style="border-top:2px dashed #000;margin-top:16px;padding-top:12px;text-align:center;font-weight:700;font-size:.9rem">${period||'PERIODE PROMO'}</div>`;
+  html+=`<div style="border-top:2px dashed #000;margin-top:16px;padding-top:12px;text-align:center;font-weight:700;font-size:12px;color:#000">${period||'PERIODE PROMO'}</div>`;
   
   html+=`</div>`;
   return html;
@@ -746,7 +772,7 @@ function renderSettingsPage(container){
         <div class="card-header"><div class="card-title">Pengaturan Printer</div></div>
         <div class="form-group">
           <label class="form-label">Jenis Printer / Ukuran Kertas</label>
-          <select class="form-control" id="s-printer" onchange="saveSettings()">
+          <select class="form-control" id="s-printer">
             ${PRINTER_OPTIONS.map(p=>`<option value="${p.id}" ${appSettings.printerType===p.id?'selected':''}>${p.label}</option>`).join('')}
           </select>
           <div class="helper-text" style="font-size:.8rem;color:var(--text-secondary);margin-top:4px">Default: Thermal 80mm</div>
@@ -757,15 +783,27 @@ function renderSettingsPage(container){
         <div class="card-header"><div class="card-title">Pengaturan Font</div></div>
         <div class="form-group">
           <label class="form-label">Jenis Font</label>
-          <select class="form-control" id="s-font" onchange="saveSettings()">
+          <select class="form-control" id="s-font">
             ${FONT_OPTIONS.map(f=>`<option value="${f.id}" ${appSettings.fontFamily===f.id?'selected':''}>${f.label}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Ketebalan Font</label>
-          <select class="form-control" id="s-weight" onchange="saveSettings()">
-            ${FONT_WEIGHT_OPTIONS.map(w=>`<option value="${w.id}" ${appSettings.fontWeight===w.id?'selected':''}>${w.label}</option>`).join('')}
+          <select class="form-control" id="s-weight">
+            ${FONT_WEIGHT_OPTIONS.map(w=>`<option value="${w.id}" ${appSettings.fontWeight===w.id?'selected':''}>${f.label}</option>`).join('').replace(/f\.label/g,'w.label')}
           </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Simpan Pengaturan</div></div>
+        <div style="padding:16px;background:var(--bg-secondary);border-radius:var(--radius);text-align:center">
+          <div style="margin-bottom:12px;font-size:.9rem;color:var(--text-secondary)">
+            Klik tombol di bawah untuk menyimpan pengaturan sebagai default
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()" style="width:100%;justify-content:center">
+            💾 SIMPAN PENGATURAN
+          </button>
         </div>
       </div>
 
@@ -806,7 +844,7 @@ async function saveSettings(){
   
   appSettings={printerType,printerWidth:printer?.width||'80mm',fontFamily,fontWeight};
   await save('settings',{id:'app',...appSettings});
-  showToast('✓ Pengaturan tersimpan');
+  showToast('✓ Pengaturan berhasil disimpan sebagai default');
   updatePreview();
 }
 
@@ -815,31 +853,20 @@ async function resetDatabase(){
     'Semua data akan dihapus dan database akan dibuat ulang. Lanjutkan?',
     async()=>{
       try{
-        if(db) db.close();
+        if(db){
+          db.close();
+        }
         await indexedDB.deleteDatabase(DB_NAME);
         showToast('Database direset. Silakan refresh halaman...');
-        setTimeout(()=>window.location.reload(),1500);
+        setTimeout(()=>{
+          window.location.reload();
+        },1500);
       }catch(err){
         showToast('Gagal reset: '+err.message,'error');
       }
     }
   );
 }
-
-// PERBAIKAN: Tutup sidebar saat resize ke desktop
-window.addEventListener('resize', () => {
-  if(window.innerWidth > 1024){
-    closeSidebar();
-  }
-});
-
-// PERBAIKAN: Tutup sidebar dengan tombol Escape
-window.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape'){
-    closeSidebar();
-    closeModal();
-  }
-});
 
 window.addEventListener('DOMContentLoaded',async()=>{
   try{
@@ -857,7 +884,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
           <h3 style="margin-bottom:16px">Gagal Memuat Aplikasi</h3>
           <p style="color:var(--text-secondary);margin-bottom:24px">${err.message}</p>
           <button class="btn btn-primary" onclick="window.location.reload()">
-            🔄 Coba Lagi
+             Coba Lagi
           </button>
         </div>
       </div>
