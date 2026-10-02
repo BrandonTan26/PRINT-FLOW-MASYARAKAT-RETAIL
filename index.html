@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRINTFLOW STUDIO - Promo Label Generator</title>
+<style>
+:root{
+  --bg-primary:#ffffff;--bg-secondary:#f3f4f6;--bg-card:#ffffff;
+  --text-primary:#111827;--text-secondary:#6b7280;--border-color:#e5e7eb;
+  --accent-color:#2563eb;--accent-hover:#1d4ed8;
+  --success-color:#10b981;--danger-color:#ef4444;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.05);--shadow-md:0 4px 6px rgba(0,0,0,0.1);
+  --radius:8px;--sidebar-width:280px;--topbar-height:60px;
+}
+[data-theme="dark"]{
+  --bg-primary:#111827;--bg-secondary:#1f2937;--bg-card:#1f2937;
+  --text-primary:#f9fafb;--text-secondary:#9ca3af;--border-color:#374151;
+  --accent-color:#3b82f6;--accent-hover:#2563eb;
+}
+[data-theme="neon"]{
+  --bg-primary:#0f0518;--bg-secondary:#1a0b2e;--bg-card:#1a0b2e;
+  --text-primary:#ffffff;--text-secondary:#e9d5ff;--border-color:#7c3aed;
+  --accent-color:#a855f7;--accent-hover:#9333ea;
+  --shadow-md:0 0 20px rgba(168,85,247,0.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-secondary);color:var(--text-primary);line-height:1.5}
+#app{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-width);background:var(--bg-card);border-right:1px solid var(--border-color);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:50}
+.sidebar-header{padding:20px;border-bottom:1px solid var(--border-color);text-align:center}
+.sidebar-brand{font-weight:900;font-size:1.5rem;color:var(--accent-color);margin-bottom:4px}
+.sidebar-version{font-size:.75rem;color:var(--text-secondary);font-weight:600}
+.sidebar-menu{flex:1;overflow-y:auto;padding:16px 12px}
+.menu-item{display:flex;align-items:center;padding:12px;border-radius:var(--radius);color:var(--text-secondary);text-decoration:none;margin-bottom:4px;transition:all .2s;cursor:pointer}
+.menu-item:hover{background:var(--bg-secondary);color:var(--text-primary)}
+.menu-item.active{background:var(--accent-color);color:white}
+.menu-item svg{margin-right:12px;width:20px;height:20px}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border-color);font-size:.75rem;color:var(--text-secondary);text-align:center}
+.main-wrapper{flex:1;margin-left:var(--sidebar-width);display:flex;flex-direction:column}
+.topbar{height:var(--topbar-height);background:var(--bg-card);border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:40}
+.topbar-left,.topbar-right{display:flex;align-items:center;gap:16px}
+.topbar-title{font-weight:700;font-size:1.1rem}
+.breadcrumb{font-size:.85rem;color:var(--text-secondary)}
+.icon-btn{width:36px;height:36px;border-radius:var(--radius);border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.icon-btn:hover{background:var(--bg-secondary);color:var(--text-primary)}
+.content-area{flex:1;padding:24px;overflow-y:auto;display:flex;gap:24px;justify-content:center}
+.content-main{flex:1;max-width:900px;min-width:0;min-height:0}
+.content-preview{width:340px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:20px;position:sticky;top:84px;height:fit-content}
+.card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border-color)}
+.card-title{font-weight:700;font-size:1rem}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px;color:var(--text-primary)}
+.required{color:var(--danger-color)}
+.form-control{width:100%;padding:10px 12px;border:1px solid var(--border-color);border-radius:var(--radius);background:var(--bg-primary);color:var(--text-primary);font-size:.95rem;transition:border-color .2s}
+.form-control:focus{outline:none;border-color:var(--accent-color)}
+.form-control.error{border-color:var(--danger-color);box-shadow:0 0 0 3px rgba(239,68,68,.1)}
+.error-msg{color:var(--danger-color);font-size:.75rem;margin-top:4px;display:none}
+.form-control.error~.error-msg{display:block}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.btn{padding:10px 20px;border-radius:var(--radius);border:none;font-weight:600;font-size:.95rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s}
+.btn-primary{background:var(--accent-color);color:white}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color)}
+.btn-secondary:hover{background:var(--border-color)}
+.btn-sm{padding:6px 12px;font-size:.85rem}
+.btn-lg{padding:14px 28px;font-size:1rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:20px;text-align:center}
+.stat-value{font-size:2rem;font-weight:800;margin-top:8px}
+.stat-label{font-size:.85rem;color:var(--text-secondary)}
+.toast-container{position:fixed;top:80px;right:24px;z-index:1000;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--bg-card);border-left:4px solid var(--success-color);padding:12px 20px;border-radius:var(--radius);box-shadow:var(--shadow-md);animation:slideIn .3s;font-size:.9rem}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.active{opacity:1;pointer-events:all}
+.modal{background:var(--bg-card);border-radius:12px;width:90%;max-width:420px;max-height:90vh;overflow-y:auto}
+.modal-header{padding:20px;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center}
+.modal-body{padding:20px}
+.modal-footer{padding:20px;border-top:1px solid var(--border-color);display:flex;justify-content:flex-end;gap:12px}
+.footer-content{text-align:center;padding:24px;border-top:1px solid var(--border-color);margin-top:auto}
+.footer-brand{font-weight:700;color:var(--accent-color);margin-bottom:8px}
+.footer-links a{color:var(--accent-color);text-decoration:none}
+.footer-links a:hover{text-decoration:underline}
+.whatsapp-btn{display:inline-flex;align-items:center;gap:8px;background:#25d366;color:white;padding:10px 20px;border-radius:var(--radius);text-decoration:none;font-weight:600;margin-top:12px;transition:opacity .2s}
+.whatsapp-btn:hover{opacity:.9;text-decoration:none}
+.hidden{display:none !important}
+.text-center{text-align:center}
+.flex{display:flex}
+.gap-2{gap:8px}
+.justify-between{justify-content:space-between}
+.items-center{align-items:center}
+.preview-wrapper{display:flex;justify-content:center;align-items:flex-start;width:100%}
+
+@media print{
+  body *{visibility:hidden}
+  #print-area,#print-area *{visibility:visible}
+  #print-area{position:absolute;left:0;top:0;width:100%;margin:0;padding:0;background:white;color:black;z-index:9999}
+  .sidebar,.topbar,.content-preview,.toast-container,.modal-overlay,.footer-content{display:none !important}
+  .main-wrapper{margin-left:0}
+  @page{margin:0;size:auto}
+}
+@media(max-width:1024px){
+  .sidebar{transform:translateX(-100%);width:280px}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .main-wrapper{margin-left:0}
+  .content-area{flex-direction:column}
+  .content-preview{width:100%;position:static}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">PRINTFLOW</div>
+      <div class="sidebar-version">VERSI 1.0 PRO</div>
+    </div>
+    <nav class="sidebar-menu">
+      <a class="menu-item active" data-page="create" onclick="navigateTo('create')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
+        Buat Promo
+      </a>
+      <a class="menu-item" data-page="queue" onclick="navigateTo('queue')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        Antrian
+      </a>
+      <a class="menu-item" data-page="history" onclick="navigateTo('history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Riwayat
+      </a>
+      <a class="menu-item" data-page="settings" onclick="navigateTo('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Pengaturan
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="margin-bottom:8px"><span style="color:var(--success-color)">●</span> Online</div>
+      <div>Version 1.0 PRO</div>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" onclick="toggleSidebar()">☰</button>
+        <div>
+          <div class="topbar-title" id="page-title">Buat Promo</div>
+          <div class="breadcrumb" id="breadcrumb">Buat Promo</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" onclick="toggleTheme()" title="Ganti Tema">🌓</button>
+      </div>
+    </header>
+
+    <main class="content-area" id="main-content"></main>
+
+    <footer class="footer-content">
+      <div class="footer-brand">CRAFTED WITH ❤️</div>
+      <div style="margin-bottom:8px">BY <a href="https://brandretailcortex.store" target="_blank" rel="noopener noreferrer" class="footer-links">BRANDRETAILCORTEX.STORE</a></div>
+      <div style="color:var(--text-secondary);font-size:.85rem">© 2026 PRINTFLOW STUDIO | Version 1.0 PRO</div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-color)">
+        <div style="font-weight:600;margin-bottom:8px">INGIN MEMBUAT WEBSITE UNTUK UMKM DLL?</div>
+        <a href="https://wa.me/6285774122710?text=Halo%20Admin%20BrandRetailCortex,%0A%0ASaya%20tertarik%20untuk%20membuat%20website%20bagi%20bisnis%20UMKM%20saya.%20Mohon%20informasi%20lebih%20lanjut%20mengenai%20layanan%20pengembangan%20website%20yang%20tersedia.%0A%0ATerima%20kasih." target="_blank" rel="noopener noreferrer" class="whatsapp-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          KLIK ADMIN WHATSAPP
+        </a>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header"><h3 id="modal-title">Konfirmasi</h3><button class="icon-btn" onclick="closeModal()"></button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" id="modal-confirm-btn">OK</button>
+    </div>
+  </div>
+</div>
+<div id="print-area" class="hidden"></div>
+
+<script>
+const DB_NAME='PrintFlowDB';
+const DB_VERSION=2; // UBAH VERSI DATABASE KE 2 untuk trigger upgrade
+let db,currentDoc={},appSettings={};
+
+const PROMO_BADGES=[
+  {id:'none',label:'Tanpa Badge'},
+  {id:'serba-gratis',label:'SERBA GRATIS'},
+  {id:'beli1gratis1',label:'BELI 1 GRATIS 1'},
+  {id:'beli2gratis1',label:'BELI 2 GRATIS 1'},
+  {id:'beli2murah',label:'BELI 2 LEBIH MURAH'},
+  {id:'promo-spesial',label:'PROMO SPESIAL'},
+  {id:'harga-spesial',label:'HARGA SPESIAL'},
+  {id:'promo-mingguan',label:'PROMO SPESIAL MINGGUAN'},
+  {id:'tebus-murah',label:'PROMO TEBUS MURAH'},
+  {id:'custom',label:'Input Manual'}
+];
+
+const PRINTER_OPTIONS=[
+  {id:'thermal-80',label:'Thermal 80mm',width:'80mm'},
+  {id:'thermal-110',label:'Thermal 110mm',width:'110mm'},
+  {id:'a4',label:'A4',width:'210mm'},
+  {id:'a5',label:'A5',width:'148mm'},
+  {id:'letter',label:'Letter',width:'215.9mm'},
+  {id:'legal',label:'Legal',width:'215.9mm'}
+];
+
+const FONT_OPTIONS=[
+  {id:'Arial',label:'Arial'},
+  {id:'Helvetica',label:'Helvetica'},
+  {id:'Times New Roman',label:'Times New Roman'},
+  {id:'Georgia',label:'Georgia'},
+  {id:'Verdana',label:'Verdana'},
+  {id:'Courier New',label:'Courier New'}
+];
+
+const FONT_WEIGHT_OPTIONS=[
+  {id:'400',label:'Normal'},
+  {id:'600',label:'Semi Bold'},
+  {id:'700',label:'Bold'},
+  {id:'900',label:'Extra Bold'}
+];
+
+// PERBAIKAN 1: Fungsi initDB yang lebih robust dengan error handling
+async function initDB(){
+  return new Promise((resolve,reject)=>{
+    // Hapus database lama jika ada masalah
+    const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+    deleteRequest.onsuccess = () => {
+      console.log('Database lama dihapus untuk reset');
+    };
+    deleteRequest.onerror = () => {
+      console.log('Tidak ada database lama atau error menghapus');
+    };
+    deleteRequest.onblocked = () => {
+      console.log('Database sedang digunakan, tunggu...');
+    };
+
+    // Buka database dengan versi baru
+    setTimeout(() => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      
+      request.onupgradeneeded = (event) => {
+        const database = event.target.result;
+        console.log('Upgrading database...');
+        
+        // Hapus semua object store lama jika ada
+        const stores = database.objectStoreNames;
+        for (let i = 0; i < stores.length; i++) {
+          database.deleteObjectStore(stores[i]);
+        }
+        
+        // Buat semua object store yang diperlukan
+        if (!database.objectStoreNames.contains('docs')) {
+          database.createObjectStore('docs', { keyPath: 'id' });
+          console.log('Object store "docs" dibuat');
+        }
+        if (!database.objectStoreNames.contains('queue')) {
+          database.createObjectStore('queue', { keyPath: 'id' });
+          console.log('Object store "queue" dibuat');
+        }
+        if (!database.objectStoreNames.contains('history')) {
+          database.createObjectStore('history', { keyPath: 'id' });
+          console.log('Object store "history" dibuat');
+        }
+        if (!database.objectStoreNames.contains('settings')) {
+          database.createObjectStore('settings', { keyPath: 'id' });
+          console.log('Object store "settings" dibuat');
+        }
+      };
+      
+      request.onsuccess = (event) => {
+        db = event.target.result;
+        console.log('Database berhasil dibuka');
+        resolve(db);
+      };
+      
+      request.onerror = (event) => {
+        console.error('Error membuka database:', event.target.error);
+        reject(new Error('Gagal membuka database: ' + event.target.error.message));
+      };
+      
+      request.onblocked = (event) => {
+        console.error('Database blocked. Tutup tab lain yang menggunakan aplikasi ini.');
+        reject(new Error('Database sedang digunakan. Silakan refresh halaman.'));
+      };
+    }, 500); // Delay 500ms untuk memastikan delete selesai
+  });
+}
+
+function dbOp(store,mode,cb){
+  return new Promise((res,rej)=>{
+    if(!db){
+      rej(new Error('Database belum terinisialisasi'));
+      return;
+    }
+    try{
+      const tx=db.transaction(store,mode);
+      const r=cb(tx.objectStore(store));
+      r.onsuccess=()=>res(r.result);
+      r.onerror=()=>rej(r.error);
+      tx.onerror = (e) => rej(e.target.error);
+    }catch(err){
+      rej(err);
+    }
+  });
+}
+
+async function save(s,d){
+  try{
+    await dbOp(s,'readwrite',st=>st.put(d));
+  }catch(err){
+    console.error('Error saving to', s, ':', err);
+    throw err;
+  }
+}
+
+async function get(s,id){
+  try{
+    return await dbOp(s,'readonly',st=>st.get(id));
+  }catch(err){
+    console.error('Error getting from', s, ':', err);
+    throw err;
+  }
+}
+
+async function getAll(s){
+  try{
+    return await dbOp(s,'readonly',st=>st.getAll());
+  }catch(err){
+    console.error('Error getting all from', s, ':', err);
+    return [];
+  }
+}
+
+async function del(s,id){
+  try{
+    await dbOp(s,'readwrite',st=>st.delete(id));
+  }catch(err){
+    console.error('Error deleting from', s, ':', err);
+    throw err;
+  }
+}
+
+async function loadSettings(){
+  try{
+    const s=await get('settings','app');
+    appSettings=s||{printerType:'thermal-80',fontFamily:'Arial',fontWeight:'900'};
+  }catch(err){
+    console.error('Error loading settings:', err);
+    appSettings={printerType:'thermal-80',fontFamily:'Arial',fontWeight:'900'};
+  }
+}
+
+function navigateTo(page){
+  document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
+  const el=document.querySelector(`.menu-item[data-page="${page}"]`);
+  if(el)el.classList.add('active');
+  const titles={create:'Buat Promo',queue:'Antrian Print',history:'Riwayat',settings:'Pengaturan'};
+  document.getElementById('page-title').textContent=titles[page]||'Buat Promo';
+  document.getElementById('breadcrumb').textContent=titles[page]||'Buat Promo';
+  renderPage(page);
+}
+
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('mobile-open')}
+
+function toggleTheme(){
+  const d=document.documentElement;
+  const t=d.getAttribute('data-theme');
+  d.setAttribute('data-theme',t==='light'?'dark':t==='dark'?'neon':'light');
+}
+
+function showToast(msg,type='success'){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className='toast';
+  t.style.borderLeftColor=type==='error'?'var(--danger-color)':'var(--success-color)';
+  t.textContent=msg;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+function openModal(title,content,onConfirm){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').innerHTML=content;
+  document.getElementById('modal-overlay').classList.add('active');
+  document.getElementById('modal-confirm-btn').onclick=()=>{if(onConfirm)onConfirm();closeModal()};
+}
+
+function closeModal(){document.getElementById('modal-overlay').classList.remove('active')}
+
+async function renderPage(page){
+  const m=document.getElementById('main-content');
+  m.innerHTML='';
+  if(page==='create'){
+    renderCreatePage(m);
+  }else if(page==='queue'){
+    renderQueuePage(m);
+  }else if(page==='history'){
+    renderHistoryPage(m);
+  }else if(page==='settings'){
+    renderSettingsPage(m);
+  }else{
+    renderCreatePage(m);
+  }
+}
+
+function renderCreatePage(container){
+  currentDoc={productName:'',productDetail:'',unit:'',priceNormal:'',pricePromo:'',promoBadge:'none',customBadge:'',periodStart:'',periodEnd:''};
+  container.innerHTML=`
+    <div class="content-main">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Informasi Produk</div></div>
+        <div class="form-group">
+          <label class="form-label">Nama Produk <span class="required">*</span></label>
+          <input type="text" class="form-control" id="f-product" placeholder="Contoh: ALFAMART AIR PET" oninput="updatePreview()">
+          <div class="error-msg">Wajib diisi</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Detail / Kemasan <span class="required">*</span></label>
+            <input type="text" class="form-control" id="f-detail" placeholder="Contoh: 600 ml" oninput="updatePreview()">
+            <div class="error-msg">Wajib diisi</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Satuan Harga <span class="required">*</span></label>
+            <input type="text" class="form-control" id="f-unit" placeholder="Contoh: /3 pcs" oninput="updatePreview()">
+            <div class="error-msg">Wajib diisi</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Harga Promo</div></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Harga Normal (Rp) <span class="required">*</span></label>
+            <input type="number" class="form-control" id="f-price-normal" placeholder="Contoh: 9600" oninput="updatePreview()">
+            <div class="error-msg">Wajib diisi</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Harga Promo (Rp) <span class="required">*</span></label>
+            <input type="number" class="form-control" id="f-price-promo" placeholder="Contoh: 6400" oninput="updatePreview()">
+            <div class="error-msg">Wajib diisi</div>
+          </div>
+        </div>
+        <div style="background:var(--bg-secondary);padding:12px;border-radius:var(--radius);margin-top:12px;text-align:center">
+          <strong style="color:var(--success-color)">HEMAT Rp <span id="calc-hemat">0</span></strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Jenis Promo</div></div>
+        <div class="form-group">
+          <label class="form-label">Pilih Jenis Promo <span class="required">*</span></label>
+          <select class="form-control" id="f-promo-badge" onchange="onBadgeChange()">
+            ${PROMO_BADGES.map(b=>`<option value="${b.id}">${b.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group hidden" id="custom-badge-group">
+          <label class="form-label">Judul Promo Custom <span class="required">*</span></label>
+          <input type="text" class="form-control" id="f-custom-badge" placeholder="Contoh: PROMO SPESIAL MINGGUAN" oninput="updatePreview()">
+          <div class="error-msg">Wajib diisi</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Periode Promo</div></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tanggal Mulai <span class="required">*</span></label>
+            <input type="date" class="form-control" id="f-period-start" oninput="updatePreview()">
+            <div class="error-msg">Wajib diisi</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tanggal Selesai <span class="required">*</span></label>
+            <input type="date" class="form-control" id="f-period-end" oninput="updatePreview()">
+            <div class="error-msg">Wajib diisi</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;margin-bottom:24px">
+        <button type="button" class="btn btn-primary btn-lg" id="btn-save" onclick="handleSave()" style="width:100%;justify-content:center;position:relative;z-index:100;cursor:pointer;pointer-events:auto!important">
+           SIMPAN KE ANTRIAN
+        </button>
+      </div>
+    </div>
+    <div class="content-preview">
+      <div class="card-title" style="margin-bottom:16px;text-align:center;font-weight:700">Live Preview</div>
+      <div class="preview-wrapper" id="preview-container"></div>
+    </div>
+  `;
+  updatePreview();
+}
+
+function onBadgeChange(){
+  const val=document.getElementById('f-promo-badge').value;
+  const customGroup=document.getElementById('custom-badge-group');
+  if(customGroup)customGroup.classList.toggle('hidden',val!=='custom');
+  updatePreview();
+}
+
+function formatPeriod(start,end){
+  if(!start||!end)return'';
+  const s=new Date(start),e=new Date(end);
+  const months=['JANUARI','FEBRUARI','MARET','APRIL','MEI','JUNI','JULI','AGUSTUS','SEPTEMBER','OKTOBER','NOVEMBER','DESEMBER'];
+  if(s.getMonth()===e.getMonth()&&s.getFullYear()===e.getFullYear()){
+    return`PERIODE ${s.getDate()} - ${e.getDate()} ${months[e.getMonth()]} ${e.getFullYear()}`;
+  }
+  return`PERIODE ${s.getDate()} ${months[s.getMonth()]} - ${e.getDate()} ${months[e.getMonth()]} ${e.getFullYear()}`;
+}
+
+function getBadgeText(doc){
+  if(doc.promoBadge==='custom')return doc.customBadge||'';
+  if(doc.promoBadge==='none')return'';
+  const b=PROMO_BADGES.find(x=>x.id===doc.promoBadge);
+  return b?b.label:'';
+}
+
+function buildLabelHTML(doc,forPrint=false){
+  const badgeText=getBadgeText(doc);
+  const period=formatPeriod(doc.periodStart,doc.periodEnd);
+  const hemat=(parseInt(doc.priceNormal)||0)-(parseInt(doc.pricePromo)||0);
+  const priceNormal=parseInt(doc.priceNormal)||0;
+  const pricePromo=parseInt(doc.pricePromo)||0;
+  const fontFamily=appSettings.fontFamily||'Arial';
+  const fontWeight=appSettings.fontWeight||'900';
+  
+  const w=forPrint?(appSettings.printerWidth||'80mm'):'280px';
+  const style=forPrint?`background:white;color:black;padding:16px;font-family:${fontFamily},sans-serif`:
+    `background:white;color:black;padding:16px;font-family:${fontFamily},sans-serif;box-shadow:var(--shadow-md);border-radius:4px`;
+  
+  let html=`<div style="width:${w};${style}">`;
+  
+  if(badgeText){
+    html+=`<div style="background:#000;color:#fff;padding:8px 12px;text-align:center;font-weight:800;font-size:1rem;margin-bottom:12px;letter-spacing:1px">${badgeText}</div>`;
+  }
+  
+  html+=`<div style="font-size:1.5rem;font-weight:${fontWeight};text-align:center;text-transform:uppercase;line-height:1.2;margin:12px 0">${doc.productName||'NAMA PRODUK'}</div>`;
+  html+=`<div style="text-align:center;color:#374151;font-size:.95rem;margin-bottom:8px">${doc.productDetail||'Detail'}</div>`;
+  
+  if(badgeText){
+    html+=`<div style="text-align:center;margin:8px 0"><div style="background:#000;color:#fff;padding:6px 12px;display:inline-block;font-weight:700;font-size:.85rem">${badgeText}</div></div>`;
+  }
+  
+  html+=`<div style="text-align:center;margin:12px 0">`;
+  html+=`<span style="font-size:1.1rem;color:#9ca3af;text-decoration:line-through;display:block;margin-bottom:4px">Rp ${priceNormal.toLocaleString('id-ID')}${doc.unit||''}</span>`;
+  
+  html+=`<div style="display:flex;align-items:baseline;justify-content:center;gap:4px">`;
+  html+=`<span style="font-size:2.8rem;font-weight:${fontWeight};line-height:1;color:#000">${pricePromo.toLocaleString('id-ID')}</span>`;
+  html+=`<span style="font-size:1rem;color:#6b7280">${doc.unit||''}</span>`;
+  html+=`</div></div>`;
+  
+  html+=`<div style="text-align:center;margin:12px 0">`;
+  html+=`<div style="border:2px solid #000;padding:8px 16px;display:inline-block;font-weight:800;font-size:1rem">HEMAT RP ${hemat.toLocaleString('id-ID')}</div>`;
+  html+=`</div>`;
+  
+  html+=`<div style="border-top:2px dashed #000;margin-top:16px;padding-top:12px;text-align:center;font-weight:700;font-size:.9rem">${period||'PERIODE PROMO'}</div>`;
+  
+  html+=`</div>`;
+  return html;
+}
+
+function updatePreview(){
+  currentDoc.productName=document.getElementById('f-product')?.value||'';
+  currentDoc.productDetail=document.getElementById('f-detail')?.value||'';
+  currentDoc.unit=document.getElementById('f-unit')?.value||'';
+  currentDoc.priceNormal=document.getElementById('f-price-normal')?.value||'';
+  currentDoc.pricePromo=document.getElementById('f-price-promo')?.value||'';
+  currentDoc.promoBadge=document.getElementById('f-promo-badge')?.value||'none';
+  currentDoc.customBadge=document.getElementById('f-custom-badge')?.value||'';
+  currentDoc.periodStart=document.getElementById('f-period-start')?.value||'';
+  currentDoc.periodEnd=document.getElementById('f-period-end')?.value||'';
+  
+  const hemat=(parseInt(currentDoc.priceNormal)||0)-(parseInt(currentDoc.pricePromo)||0);
+  const hematEl=document.getElementById('calc-hemat');
+  if(hematEl)hematEl.textContent=hemat.toLocaleString('id-ID');
+  
+  const container=document.getElementById('preview-container');
+  if(container)container.innerHTML=buildLabelHTML(currentDoc);
+}
+
+function clearErrors(){
+  document.querySelectorAll('.form-control.error').forEach(el=>el.classList.remove('error'));
+}
+
+function showError(id,msg){
+  const el=document.getElementById(id);
+  if(el){
+    el.classList.add('error');
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+    setTimeout(()=>el.focus(),300);
+  }
+  showToast(msg,'error');
+  return false;
+}
+
+function handleSave(){
+  const btn = document.getElementById('btn-save');
+  const originalText = btn ? btn.innerHTML : 'SIMPAN KE ANTRIAN';
+  
+  if(btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+    btn.innerHTML = 'Menyimpan...';
+  }
+
+  function resetBtn(){
+    if(btn){
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.innerHTML = originalText;
+    }
+  }
+
+  try{
+    clearErrors();
+    const productName=document.getElementById('f-product')?.value?.trim()||'';
+    const productDetail=document.getElementById('f-detail')?.value?.trim()||'';
+    const unit=document.getElementById('f-unit')?.value?.trim()||'';
+    const priceNormal=document.getElementById('f-price-normal')?.value?.trim()||'';
+    const pricePromo=document.getElementById('f-price-promo')?.value?.trim()||'';
+    const promoBadge=document.getElementById('f-promo-badge')?.value||'none';
+    const customBadge=document.getElementById('f-custom-badge')?.value?.trim()||'';
+    const periodStart=document.getElementById('f-period-start')?.value||'';
+    const periodEnd=document.getElementById('f-period-end')?.value||'';
+    
+    if(!productName){ showError('f-product','Nama produk wajib diisi'); resetBtn(); return; }
+    if(!productDetail){ showError('f-detail','Detail produk wajib diisi'); resetBtn(); return; }
+    if(!unit){ showError('f-unit','Satuan wajib diisi'); resetBtn(); return; }
+    if(!priceNormal){ showError('f-price-normal','Harga normal wajib diisi'); resetBtn(); return; }
+    if(!pricePromo){ showError('f-price-promo','Harga promo wajib diisi'); resetBtn(); return; }
+    if(promoBadge==='custom'&&!customBadge){ showError('f-custom-badge','Judul promo custom wajib diisi'); resetBtn(); return; }
+    if(!periodStart){ showError('f-period-start','Tanggal mulai wajib diisi'); resetBtn(); return; }
+    if(!periodEnd){ showError('f-period-end','Tanggal selesai wajib diisi'); resetBtn(); return; }
+    
+    const pn=parseInt(priceNormal);
+    const pp=parseInt(pricePromo);
+    if(isNaN(pn)||pn<=0){ showError('f-price-normal','Harga normal harus angka valid'); resetBtn(); return; }
+    if(isNaN(pp)||pp<=0){ showError('f-price-promo','Harga promo harus angka valid'); resetBtn(); return; }
+    if(pp>pn){ showError('f-price-promo','Harga promo tidak boleh lebih besar dari harga normal'); resetBtn(); return; }
+    if(periodEnd<periodStart){ showError('f-period-end','Tanggal selesai harus setelah tanggal mulai'); resetBtn(); return; }
+    
+    currentDoc={productName,productDetail,unit,priceNormal,pricePromo,promoBadge,customBadge,periodStart,periodEnd};
+    
+    saveToQueue().then(()=>{
+      showToast('✓ Promo berhasil disimpan ke antrian');
+      navigateTo('queue');
+    }).catch(err=>{
+      console.error(err);
+      showToast('Gagal menyimpan: '+err.message,'error');
+    }).finally(resetBtn);
+    
+  }catch(err){
+    console.error(err);
+    showToast('Terjadi kesalahan: '+err.message,'error');
+    resetBtn();
+  }
+}
+
+async function saveToQueue(){
+  const doc={id:Date.now().toString(),...currentDoc,createdAt:new Date().toISOString(),status:'WAITING'};
+  await save('docs',doc);
+  await save('queue',{...doc,status:'WAITING'});
+}
+
+async function renderQueuePage(container){
+  const queue=await getAll('queue');
+  const sorted=queue.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  container.innerHTML=`
+    <div class="content-main">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Antrian Print</div></div>
+        ${sorted.length===0?'<div class="text-center" style="padding:40px;color:var(--text-secondary)">Antrian kosong</div>':
+          sorted.map(q=>{
+            const b=PROMO_BADGES.find(x=>x.id===q.promoBadge);
+            const badgeLabel=b?.label||q.customBadge||'-';
+            return`<div class="card" style="margin-bottom:16px">
+              <div class="flex justify-between items-center" style="margin-bottom:12px">
+                <strong>${q.productName}</strong>
+                <span style="background:var(--bg-secondary);padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:600">${badgeLabel}</span>
+              </div>
+              <div style="font-size:.9rem;color:var(--text-secondary);margin-bottom:12px">
+                Rp ${parseInt(q.pricePromo).toLocaleString('id-ID')}${q.unit} | Hemat Rp ${(parseInt(q.priceNormal)-parseInt(q.pricePromo)).toLocaleString('id-ID')}
+              </div>
+              <div class="flex gap-2">
+                <button class="btn btn-secondary btn-sm" onclick="previewDoc('${q.id}')" style="flex:1">Preview</button>
+                <button class="btn btn-primary btn-sm" onclick="printDoc('${q.id}')" style="flex:1">Print</button>
+                <button class="btn btn-secondary btn-sm" onclick="delDoc('${q.id}')" style="flex:1">Hapus</button>
+              </div>
+            </div>`;
+          }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+async function previewDoc(id){
+  const doc=await get('queue',id);
+  if(!doc)return;
+  const html=buildLabelHTML(doc);
+  openModal('Preview Promo',`<div class="preview-wrapper">${html}</div>`,null);
+}
+
+async function printDoc(id){
+  const doc=await get('queue',id);
+  if(!doc)return;
+  const pa=document.getElementById('print-area');
+  pa.innerHTML=buildLabelHTML(doc,true);
+  pa.classList.remove('hidden');
+  await save('queue',{...doc,status:'PRINTING'});
+  renderQueuePage(document.getElementById('main-content'));
+  setTimeout(()=>{
+    window.print();
+    setTimeout(async()=>{
+      await save('queue',{...doc,status:'PRINTED'});
+      await save('history',{...doc,printDate:new Date().toISOString()});
+      pa.classList.add('hidden');
+      showToast('✓ Print berhasil');
+      renderQueuePage(document.getElementById('main-content'));
+    },1000);
+  },500);
+}
+
+async function delDoc(id){
+  openModal('Hapus Promo?','Promo akan dihapus dari antrian.',async()=>{
+    await del('queue',id);
+    await del('docs',id);
+    showToast('Promo dihapus');
+    renderQueuePage(document.getElementById('main-content'));
+  });
+}
+
+async function renderHistoryPage(container){
+  const hist=await getAll('history');
+  const sorted=hist.sort((a,b)=>new Date(b.printDate)-new Date(a.printDate));
+  container.innerHTML=`
+    <div class="content-main">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Riwayat Print</div></div>
+        ${sorted.length===0?'<div class="text-center" style="padding:40px;color:var(--text-secondary)">Belum ada riwayat</div>':
+          sorted.map(h=>{
+            const b=PROMO_BADGES.find(x=>x.id===h.promoBadge);
+            return`<div style="padding:12px;border-bottom:1px solid var(--border-color)">
+              <div style="font-weight:600">${h.productName}</div>
+              <div style="font-size:.85rem;color:var(--text-secondary)">${b?.label||h.customBadge} • ${new Date(h.printDate).toLocaleString('id-ID')}</div>
+            </div>`;
+          }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderSettingsPage(container){
+  container.innerHTML=`
+    <div class="content-main">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Pengaturan Printer</div></div>
+        <div class="form-group">
+          <label class="form-label">Jenis Printer / Ukuran Kertas</label>
+          <select class="form-control" id="s-printer" onchange="saveSettings()">
+            ${PRINTER_OPTIONS.map(p=>`<option value="${p.id}" ${appSettings.printerType===p.id?'selected':''}>${p.label}</option>`).join('')}
+          </select>
+          <div class="helper-text" style="font-size:.8rem;color:var(--text-secondary);margin-top:4px">Default: Thermal 80mm</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Pengaturan Font</div></div>
+        <div class="form-group">
+          <label class="form-label">Jenis Font</label>
+          <select class="form-control" id="s-font" onchange="saveSettings()">
+            ${FONT_OPTIONS.map(f=>`<option value="${f.id}" ${appSettings.fontFamily===f.id?'selected':''}>${f.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ketebalan Font</label>
+          <select class="form-control" id="s-weight" onchange="saveSettings()">
+            ${FONT_WEIGHT_OPTIONS.map(w=>`<option value="${w.id}" ${appSettings.fontWeight===w.id?'selected':''}>${w.label}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Reset Database</div></div>
+        <div style="padding:16px;background:var(--bg-secondary);border-radius:var(--radius)">
+          <div style="margin-bottom:12px;font-size:.9rem;color:var(--text-secondary)">
+            Jika masih ada masalah, klik tombol di bawah untuk reset database
+          </div>
+          <button class="btn btn-secondary" onclick="resetDatabase()">
+            🗑️ Reset Database
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Tentang Aplikasi</div></div>
+        <div style="text-align:center;padding:20px">
+          <div style="font-size:2rem;font-weight:900;color:var(--accent-color);margin-bottom:8px">PRINTFLOW</div>
+          <div style="color:var(--text-secondary);margin-bottom:16px">Version 1.0 PRO</div>
+          <div style="font-size:.9rem;line-height:1.6;color:var(--text-secondary)">
+            Aplikasi profesional untuk membuat dan mencetak label promo produk.<br>
+            Mendukung berbagai ukuran kertas thermal dan standar.<br>
+            Dibuat dengan ❤️ untuk UMKM Indonesia
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function saveSettings(){
+  const printerType=document.getElementById('s-printer')?.value||'thermal-80';
+  const fontFamily=document.getElementById('s-font')?.value||'Arial';
+  const fontWeight=document.getElementById('s-weight')?.value||'900';
+  
+  const printer=PRINTER_OPTIONS.find(p=>p.id===printerType);
+  
+  appSettings={printerType,printerWidth:printer?.width||'80mm',fontFamily,fontWeight};
+  await save('settings',{id:'app',...appSettings});
+  showToast('✓ Pengaturan tersimpan');
+  updatePreview();
+}
+
+// PERBAIKAN 2: Fungsi reset database manual
+async function resetDatabase(){
+  openModal('Reset Database?',
+    'Semua data akan dihapus dan database akan dibuat ulang. Lanjutkan?',
+    async()=>{
+      try{
+        if(db){
+          db.close();
+        }
+        await indexedDB.deleteDatabase(DB_NAME);
+        showToast('Database direset. Silakan refresh halaman...');
+        setTimeout(()=>{
+          window.location.reload();
+        },1500);
+      }catch(err){
+        showToast('Gagal reset: '+err.message,'error');
+      }
+    }
+  );
+}
+
+// PERBAIKAN 3: Inisialisasi dengan error handling yang lebih baik
+window.addEventListener('DOMContentLoaded',async()=>{
+  try{
+    await initDB();
+    await loadSettings();
+    navigateTo('create');
+  }catch(err){
+    console.error('Initialization error:',err);
+    showToast('Error inisialisasi: '+err.message,'error');
+    // Tampilkan tombol retry
+    const m=document.getElementById('main-content');
+    m.innerHTML=`
+      <div class="content-main">
+        <div class="card text-center" style="padding:40px">
+          <div style="font-size:3rem;margin-bottom:16px">️</div>
+          <h3 style="margin-bottom:16px">Gagal Memuat Aplikasi</h3>
+          <p style="color:var(--text-secondary);margin-bottom:24px">${err.message}</p>
+          <button class="btn btn-primary" onclick="window.location.reload()">
+            🔄 Coba Lagi
+          </button>
+        </div>
+      </div>
+    `;
+  }
+});
+</script>
+</body>
+</html>
